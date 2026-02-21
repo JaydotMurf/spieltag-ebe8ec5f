@@ -116,11 +116,20 @@ export function useSquadData(): SquadData {
         setTransfersRemaining(Math.max(0, 5 - (transferCount ?? 0)));
       }
 
-      // Fetch benchmarks
-      const { data: benchmarks } = await supabase
+      // Fetch benchmarks — try current matchday, fall back to latest available
+      let { data: benchmarks } = await supabase
         .from('benchmark_snapshot')
         .select('*')
         .eq('matchday', matchday);
+
+      if (!benchmarks || benchmarks.length === 0) {
+        const { data: latestBenchmarks } = await supabase
+          .from('benchmark_snapshot')
+          .select('*')
+          .order('matchday', { ascending: false })
+          .limit(4);
+        benchmarks = latestBenchmarks;
+      }
 
       setBenchmarkSnapshots(benchmarks ?? []);
 

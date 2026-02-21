@@ -137,19 +137,19 @@ export function PlayerList({
                 `}
               >
                 {/* Name + Club */}
-                <div className="flex flex-1 min-w-0 items-baseline gap-sp-1">
+                <div className="flex min-w-0 flex-[2] items-baseline gap-sp-1">
                   <span className="body-primary text-foreground truncate">{player.name}</span>
                   <span className="body-secondary shrink-0">{player.team}</span>
                 </div>
 
                 {/* Price */}
-                <span className="stat-value text-foreground w-16 text-right shrink-0">€{Number(player.price).toFixed(1)}M</span>
+                <span className="stat-value text-foreground w-14 text-right shrink-0">€{Number(player.price).toFixed(1)}M</span>
 
                 {/* Rolling yield */}
-                <span className="stat-value text-foreground w-12 text-right shrink-0">{Number(player.rolling_yield).toFixed(2)}</span>
+                <span className="stat-value text-foreground w-10 text-right shrink-0">{Number(player.rolling_yield).toFixed(2)}</span>
 
                 {/* Value signal badge */}
-                <div className="w-24 text-right shrink-0 max-sm:hidden">
+                <div className="w-20 text-right shrink-0 max-sm:hidden">
                   {signal && <ValueBadge signal={signal} />}
                 </div>
               </div>
