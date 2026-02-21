@@ -79,11 +79,19 @@ export default function HoldingsPage() {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-end px-sp-4 py-sp-2 border-b border-border">
-              <span className="kpi-label mr-sp-3">BUDGET REMAINING</span>
-              <span className="stat-value text-foreground tabular-nums">
-                €{Number(squad?.budget_remaining ?? 0).toFixed(1)}M
-              </span>
+            <div className="flex items-center justify-end px-sp-4 py-sp-2 border-b border-border gap-sp-6">
+              <div className="flex items-center">
+                <span className="kpi-label mr-sp-3">BUDGET USED</span>
+                <span className="stat-value text-foreground tabular-nums">
+                  €{(100 - Number(squad?.budget_remaining ?? 100)).toFixed(1)}M
+                </span>
+              </div>
+              <div className="flex items-center">
+                <span className="kpi-label mr-sp-3">BUDGET REMAINING</span>
+                <span className="stat-value text-foreground tabular-nums">
+                  €{Number(squad?.budget_remaining ?? 0).toFixed(1)}M
+                </span>
+              </div>
             </div>
             <div className="flex h-8 items-center border-b border-border px-sp-4 bg-surface">
               <div className="flex-1" />
