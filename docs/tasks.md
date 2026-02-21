@@ -15,11 +15,11 @@
 - ✅ Google OAuth configured
 
 ### 0B — Seed Data
-- ⬜ Insert 200+ Bundesliga players into `players` table
-- ⬜ Insert 5 matchdays of `matchday_stats`
-- ⬜ Insert 10 matchdays of `price_history`
-- ⬜ Insert 4 `benchmark_snapshot` rows (GK, DEF, MID, FWD) for current matchday
-- ⬜ Insert 3 `matchday_config` rows (past/locked, current/active, future/upcoming)
+- ✅ Insert 200+ Bundesliga players into `players` table
+- ✅ Insert 5 matchdays of `matchday_stats`
+- ✅ Insert 10 matchdays of `price_history`
+- ✅ Insert 4 `benchmark_snapshot` rows (GK, DEF, MID, FWD) for matchday 24
+- ✅ Insert 3 `matchday_config` rows (23 locked, 24 active, 25 upcoming)
 
 > **Note:** Seed data is a prerequisite for any meaningful UI testing. Without it, all pages render empty states.
 
