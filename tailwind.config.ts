@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -47,6 +50,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Spieltag signal colors
+        "signal-green": "hsl(var(--green-positive))",
+        "signal-green-surface": "hsl(var(--green-surface))",
+        "signal-red": "hsl(var(--red-negative))",
+        "signal-red-surface": "hsl(var(--red-surface))",
+        "surface": "hsl(var(--grey-surface))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -58,6 +67,18 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
       },
+      spacing: {
+        'sp-1': '4px',
+        'sp-2': '8px',
+        'sp-3': '12px',
+        'sp-4': '16px',
+        'sp-5': '20px',
+        'sp-6': '24px',
+        'sp-8': '32px',
+        'sp-10': '40px',
+        'sp-12': '48px',
+        'sp-16': '64px',
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
@@ -65,20 +86,12 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
       },
       animation: {
