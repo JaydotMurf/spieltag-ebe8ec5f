@@ -68,7 +68,7 @@
     font-variant-numeric: tabular-nums;
   }
   .kpi-value {
-    @apply text-[28px] leading-[56px] font-bold tabular-nums;
+    @apply text-[28px] leading-[32px] font-bold tabular-nums;
     font-family: 'Inter', sans-serif;
   }
   .kpi-label {
