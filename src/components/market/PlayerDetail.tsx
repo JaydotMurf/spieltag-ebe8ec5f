@@ -3,6 +3,10 @@ import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import type { MarketPlayer } from '@/hooks/useMarketPlayers';
 import type { PlayerDetailData } from '@/hooks/usePlayerDetail';
 import { calculateRollingYield, getValueSignal } from '@/lib/metrics';
+import { useSquadDataContext } from '@/components/AppShell';
+import { supabase } from '@/integrations/supabase/client';
+import { validateClubLimit } from '@/lib/validators';
+import { useState } from 'react';
 
 interface PlayerDetailProps {
   player: MarketPlayer;
@@ -11,15 +15,79 @@ interface PlayerDetailProps {
 }
 
 export function PlayerDetail({ player, detail, benchmarkYield }: PlayerDetailProps) {
+  const { squad, players, transfersRemaining, isLocked, currentMatchday, refetch } = useSquadDataContext();
+  const [transferring, setTransferring] = useState(false);
+  const [transferError, setTransferError] = useState<string | null>(null);
+
   const yield_ = calculateRollingYield({ last_5_points: player.last_5_points, price: Number(player.price) });
   const signal = getValueSignal(yield_, benchmarkYield);
 
-  // Price chart color: green if net positive, red if negative
+  const isInSquad = players.some(p => p.id === player.id);
+  const squadFull = players.length >= 15;
+  const budgetInsufficient = squad ? Number(player.price) > squad.budget_remaining : false;
+  const positionFull = (() => {
+    if (!squadFull) {
+      const posCount = players.filter(p => p.position === player.position).length;
+      const max: Record<string, number> = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
+      return posCount >= (max[player.position] ?? 0);
+    }
+    return false;
+  })();
+
+  // Transfer In button state
+  const canTransferIn = !isInSquad && !isLocked && !budgetInsufficient && !positionFull;
+  const buttonLabel = isInSquad
+    ? 'Already in Squad'
+    : budgetInsufficient
+      ? 'Insufficient budget'
+      : positionFull
+        ? `${player.position} slots full`
+        : 'Transfer In';
+
+  const handleTransferIn = async () => {
+    if (!squad || !canTransferIn) return;
+    setTransferError(null);
+    setTransferring(true);
+
+    try {
+      // During squad build (<15 players), skip transfer log but enforce composition + club limit + budget
+      const clubResult = validateClubLimit(
+        { id: player.id, team: player.team },
+        players.map(p => ({ id: p.id, team: p.team }))
+      );
+      if (clubResult.blocked) {
+        setTransferError(clubResult.reason);
+        setTransferring(false);
+        return;
+      }
+
+      // Add to squad
+      await supabase.from('squad_players').insert({
+        squad_id: squad.id,
+        player_id: player.id,
+      });
+
+      // Deduct budget
+      await supabase.from('squads').update({
+        budget_remaining: squad.budget_remaining - Number(player.price),
+      }).eq('id', squad.id);
+
+      refetch();
+    } catch {
+      setTransferError('Transfer failed. Try again.');
+    } finally {
+      setTransferring(false);
+    }
+  };
+
+  // Price chart color: green if net positive, red if negative, black if flat
   const priceColor = useMemo(() => {
-    if (detail.priceHistory.length < 2) return '#15803D';
+    if (detail.priceHistory.length < 2) return '#111111';
     const first = detail.priceHistory[0].price;
     const last = detail.priceHistory[detail.priceHistory.length - 1].price;
-    return last >= first ? '#15803D' : '#D3010C';
+    if (last > first) return '#15803D';
+    if (last < first) return '#D3010C';
+    return '#111111';
   }, [detail.priceHistory]);
 
   // Price summary
@@ -36,22 +104,34 @@ export function PlayerDetail({ player, detail, benchmarkYield }: PlayerDetailPro
   const perfSummary = useMemo(() => {
     if (detail.matchdayStats.length === 0) return null;
     const totalLast5 = detail.matchdayStats.reduce((sum, s) => sum + s.points, 0);
-    return `Last 5: ${totalLast5} pts | Rolling Yield: ${yield_.toFixed(2)}`;
+    return `Last ${detail.matchdayStats.length}: ${totalLast5} pts | Rolling Yield: ${yield_.toFixed(2)}`;
   }, [detail.matchdayStats, yield_]);
 
-  const signalColor = signal === 'UNDERVALUED'
-    ? 'text-signal-green bg-signal-green-surface'
-    : signal === 'OVERVALUED'
-      ? 'text-signal-red bg-signal-red-surface'
-      : 'text-muted-foreground bg-surface';
+  // Value signal badge
+  const signalBadge = signal === 'UNDERVALUED' ? (
+    <span className="inline-flex items-center gap-sp-2">
+      <span className="h-2 w-2 rounded-full bg-signal-green" />
+      <span className="badge-text text-signal-green">Undervalued</span>
+    </span>
+  ) : signal === 'OVERVALUED' ? (
+    <span className="inline-flex items-center gap-sp-2">
+      <span className="h-2 w-2 rounded-full bg-signal-red" />
+      <span className="badge-text text-signal-red">Overvalued</span>
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-sp-2">
+      <span className="h-2 w-2 rounded-full bg-muted-foreground" />
+      <span className="badge-text text-muted-foreground">Fair</span>
+    </span>
+  );
 
-  // Axis tick formatter: show only first & last
-  const makeTickFormatter = (data: { matchday: number }[]) => {
-    if (data.length === 0) return () => '';
-    const first = data[0].matchday;
-    const last = data[data.length - 1].matchday;
-    return (val: number) => (val === first || val === last) ? `MD${val}` : '';
-  };
+  // XAxis ticks: only first and last matchday
+  const priceTicks = detail.priceHistory.length > 0
+    ? [detail.priceHistory[0].matchday, detail.priceHistory[detail.priceHistory.length - 1].matchday]
+    : [];
+  const perfTicks = detail.matchdayStats.length > 0
+    ? [detail.matchdayStats[0].matchday, detail.matchdayStats[detail.matchdayStats.length - 1].matchday]
+    : [];
 
   return (
     <div className="flex h-full flex-col overflow-y-auto p-sp-6">
@@ -60,49 +140,58 @@ export function PlayerDetail({ player, detail, benchmarkYield }: PlayerDetailPro
         <h2 className="page-header text-foreground">{player.name}</h2>
         <div className="flex items-center gap-sp-3 mt-sp-1">
           <span className="body-secondary">{player.team}</span>
-          <span className="body-secondary">·</span>
-          <span className="body-secondary">{player.position}</span>
-          <span className={`badge-text px-sp-2 py-0.5 rounded ${signalColor}`}>
-            {signal}
-          </span>
+          <span className="rounded bg-surface px-sp-3 py-1 text-[14px] text-foreground">{player.position}</span>
         </div>
       </div>
 
-      {/* Stat grid */}
-      <div className="grid grid-cols-4 gap-sp-4 mb-sp-6 border border-border rounded p-sp-4">
+      {/* Stat grid — 2 col × 3 row */}
+      <div className="grid grid-cols-2 gap-x-sp-8 gap-y-sp-4 mb-sp-6">
         <StatCell label="PRICE" value={`€${Number(player.price).toFixed(1)}M`} />
         <StatCell label="SEASON PTS" value={String(player.season_points)} />
         <StatCell label="LAST 5 PTS" value={String(player.last_5_points)} />
-        <StatCell label="YIELD" value={yield_.toFixed(2)} />
+        <StatCell label="ROLLING YIELD" value={yield_.toFixed(2)} />
+        <StatCell label="BENCHMARK YIELD" value={benchmarkYield.toFixed(2)} />
+        <div className="flex flex-col">
+          <span className="kpi-label">VALUE SIGNAL</span>
+          <div className="mt-sp-1">{signalBadge}</div>
+        </div>
       </div>
 
+      {/* Divider */}
+      <div className="border-t border-border mb-sp-6" />
+
       {/* Price Trend Chart */}
-      <div className="mb-sp-6">
-        <span className="section-header text-foreground mb-sp-2 block">Price Trend</span>
+      <div className="mb-sp-4">
+        <span className="kpi-label block mb-sp-2">PRICE TREND</span>
         {detail.priceHistory.length > 0 ? (
           <>
-            <div className="h-[120px] w-full">
-              <ResponsiveContainer width="100%" height={120}>
-                <LineChart data={detail.priceHistory}>
-                  <XAxis
-                    dataKey="matchday"
-                    tick={{ fontSize: 11, fill: 'hsl(218, 11%, 65%)' }}
-                    tickFormatter={makeTickFormatter(detail.priceHistory)}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis hide />
-                  <Line
-                    type="monotone"
-                    dataKey="price"
-                    stroke={priceColor}
-                    strokeWidth={2}
-                    dot={false}
-                    isAnimationActive={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            <ResponsiveContainer width="100%" height={120}>
+              <LineChart data={detail.priceHistory}>
+                <XAxis
+                  dataKey="matchday"
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                  ticks={priceTicks}
+                  tickFormatter={(val: number) => `MD${val}`}
+                />
+                <YAxis
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={32}
+                  domain={['auto', 'auto']}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="price"
+                  stroke={priceColor}
+                  strokeWidth={1.5}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
             {priceSummary && (
               <span className="body-secondary mt-sp-2 block">{priceSummary}</span>
             )}
@@ -112,33 +201,41 @@ export function PlayerDetail({ player, detail, benchmarkYield }: PlayerDetailPro
         )}
       </div>
 
+      {/* 16px gap between charts */}
+      <div className="h-sp-4" />
+
       {/* Performance Trend Chart */}
       <div className="mb-sp-6">
-        <span className="section-header text-foreground mb-sp-2 block">Performance Trend</span>
+        <span className="kpi-label block mb-sp-2">PERFORMANCE TREND</span>
         {detail.matchdayStats.length > 0 ? (
           <>
-            <div className="h-[120px] w-full">
-              <ResponsiveContainer width="100%" height={120}>
-                <LineChart data={detail.matchdayStats}>
-                  <XAxis
-                    dataKey="matchday"
-                    tick={{ fontSize: 11, fill: 'hsl(218, 11%, 65%)' }}
-                    tickFormatter={makeTickFormatter(detail.matchdayStats)}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis hide />
-                  <Line
-                    type="monotone"
-                    dataKey="points"
-                    stroke="#111111"
-                    strokeWidth={2}
-                    dot={false}
-                    isAnimationActive={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            <ResponsiveContainer width="100%" height={120}>
+              <LineChart data={detail.matchdayStats}>
+                <XAxis
+                  dataKey="matchday"
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                  ticks={perfTicks}
+                  tickFormatter={(val: number) => `MD${val}`}
+                />
+                <YAxis
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={32}
+                  domain={['auto', 'auto']}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="points"
+                  stroke="#111111"
+                  strokeWidth={1.5}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
             {perfSummary && (
               <span className="body-secondary mt-sp-2 block">{perfSummary}</span>
             )}
@@ -147,15 +244,33 @@ export function PlayerDetail({ player, detail, benchmarkYield }: PlayerDetailPro
           <span className="body-secondary">No performance data available.</span>
         )}
       </div>
+
+      {/* Divider */}
+      <div className="border-t border-border mb-sp-4" />
+
+      {/* Transfer In button */}
+      {transferError && (
+        <span className="text-[12px] text-signal-red mb-sp-2 block">{transferError}</span>
+      )}
+      <button
+        onClick={handleTransferIn}
+        disabled={!canTransferIn || transferring}
+        className="h-9 w-full rounded bg-foreground px-sp-4 text-[14px] font-semibold text-primary-foreground
+          transition-colors duration-150 hover:bg-[#374151]
+          focus:outline-2 focus:outline-offset-2 focus:outline-foreground
+          disabled:bg-border disabled:text-muted-foreground disabled:cursor-not-allowed"
+      >
+        {transferring ? 'Processing…' : buttonLabel}
+      </button>
     </div>
   );
 }
 
 function StatCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col">
       <span className="kpi-label">{label}</span>
-      <span className="stat-value text-foreground">{value}</span>
+      <span className="stat-value text-foreground mt-sp-1">{value}</span>
     </div>
   );
 }

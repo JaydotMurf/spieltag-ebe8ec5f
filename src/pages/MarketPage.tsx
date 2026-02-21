@@ -16,7 +16,6 @@ export default function MarketPage() {
     [players, selectedPlayerId]
   );
 
-  // Get benchmark yield for the selected player's position
   const benchmarkYield = useMemo(() => {
     if (!selectedPlayer) return 0;
     const snap = benchmarkSnapshots.find(b => b.position === selectedPlayer.position);
@@ -24,7 +23,7 @@ export default function MarketPage() {
   }, [selectedPlayer, benchmarkSnapshots]);
 
   return (
-    <div className="flex h-[calc(100vh-theme(spacing.sp-16)-44px-44px)] max-sm:flex-col">
+    <div className="flex h-[calc(100vh-56px-44px)] max-sm:flex-col gap-sp-8 max-sm:gap-0">
       {/* Left panel — 40% */}
       <div className="w-[40%] max-sm:w-full max-sm:h-[50%] shrink-0">
         <PlayerList
@@ -39,8 +38,8 @@ export default function MarketPage() {
         />
       </div>
 
-      {/* Right panel — 60% */}
-      <div className="flex-1 max-sm:h-[50%]">
+      {/* Right panel — 60%, sticky */}
+      <div className="flex-1 max-sm:h-[50%] overflow-y-auto">
         {selectedPlayer ? (
           <PlayerDetail
             player={selectedPlayer}

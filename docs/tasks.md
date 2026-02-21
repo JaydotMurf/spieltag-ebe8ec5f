@@ -80,24 +80,25 @@
 - ✅ `useSquadData` hook — fetches squad, players, matchday config, benchmarks, transfer count
 - ✅ Transfer count from live Supabase query on `transfer_log` (Architecture Rule 1)
 - ✅ `PositionGroup` component — players grouped by GK/DEF/MID/FWD
-- ⬜ **Subtask:** Star designation — click star icon to set `is_star`, auto-deselect previous star in same sector
-- ⬜ **Subtask:** Leverage toggle per sector (DEF, MID, FWD) — persists to Supabase `squads` table
-- ⬜ **Subtask:** WASTED LEVERAGE warning display (red #D3010C, under sector header)
+- ✅ **Subtask:** Star designation — click star icon to set `is_star`, auto-deselect previous star in same sector
+- ✅ **Subtask:** Leverage toggle per sector (DEF, MID, FWD) — persists to Supabase `squads` table
+- ✅ **Subtask:** WASTED LEVERAGE warning display (red #D3010C, under sector header)
 - ✅ `TransferDrawer` — inline below player row, search + replacement list
-- ⬜ **Subtask:** Transfer drawer search filters to same-position only, excludes current squad
-- ⬜ **Subtask:** Transfer confirm flow: run 3 validators → insert transfer_log → update squad_players → recompute Top 11
-- ⬜ **Subtask:** Yield impact preview in drawer before confirm
+- ✅ **Subtask:** Transfer drawer search filters to same-position only, excludes current squad
+- ✅ **Subtask:** Transfer confirm flow: run 3 validators → insert transfer_log → update squad_players → recompute Top 11
+- ✅ **Subtask:** Yield impact preview in drawer before confirm
+- ✅ **Subtask:** Budget enforcement on transfer (update budget_remaining)
 - ✅ `OutputXIPanel` — formation name, 11 players, bench, x1.5 badge
-- ⬜ **Subtask:** Bench section at 50% opacity
-- ⬜ **Subtask:** Recalculate Top 11 on every trigger (toggle, star, transfer)
-- ⬜ **Subtask:** Locked state — disable all transfer buttons, toggles, star icons when `is_locked = true`
-- ⬜ **Subtask:** Locked banner below tab bar: "Matchday in Progress — Transfers Locked"
+- ✅ **Subtask:** Bench section at 50% opacity
+- ✅ **Subtask:** Recalculate Top 11 on every trigger (toggle, star, transfer)
+- ✅ **Subtask:** Locked state — disable all transfer buttons, toggles, star icons when `is_locked = true`
+- ✅ **Subtask:** Locked banner below tab bar: "Matchday in Progress — Transfers Locked"
 
 ### Holdings Layout
-- ⬜ Desktop: 65% list / 35% Output XI / 32px gap (design_guidelines §4)
-- ⬜ Output XI panel sticky (does not scroll with list)
-- ⬜ Player row height: 48px fixed, alternate row tinting (#F9FAFB)
-- ⬜ Player row anatomy: star icon | name | club | price | last 5 pts | yield | signal badge | Transfer Out button
+- ✅ Desktop: 65% list / 35% Output XI / 32px gap (design_guidelines §4)
+- ✅ Output XI panel sticky (does not scroll with list)
+- ✅ Player row height: 48px fixed, alternate row tinting (#F9FAFB)
+- ✅ Player row anatomy: star icon | name | club | price | last 5 pts | yield | signal badge | Transfer Out button
 
 ---
 
@@ -108,41 +109,43 @@
 - ✅ `usePlayerDetail` — fetch price_history (last 10) + matchday_stats (last 5)
 
 ### Step 5 — Market Page (`src/pages/MarketPage.tsx`)
-- ✅ Layout: left panel 40% / right panel 60%
-- ⬜ Right panel sticky (does not scroll with left panel list)
-- ⬜ 32px gap between panels (design_guidelines §4)
+- ✅ Layout: left panel 40% / right panel 60% / 32px gap
+- ✅ Right panel independently scrollable
 
 ### Left Panel — PlayerList (`src/components/market/PlayerList.tsx`)
-- ✅ Position filter pills (ALL | GK | DEF | MID | FWD)
+- ✅ Position filter pills (ALL | GK | DEF | MID | FWD) — active: #111 bg, inactive: border
 - ✅ Search input auto-focused
 - ✅ List sorted by rolling_yield descending
-- ⬜ **Subtask:** Selected row — 2px left border #111111 (design_guidelines §14)
-- ⬜ **Subtask:** Player row format: name | club | price | rolling yield | value signal badge
-- ⬜ **Subtask:** Empty search results: "No players match your search." centered
+- ✅ Selected row — 2px left border #111111
+- ✅ Player row format: name | club | price | rolling yield | value signal badge
+- ✅ Alternate row tinting
+- ✅ Empty search results: "No players match your search." centered
 
 ### Right Panel — PlayerDetail (`src/components/market/PlayerDetail.tsx`)
-- ✅ Player header: name, club, position badge
-- ✅ Stat grid: price, season pts, last 5 pts, rolling yield, benchmark yield, value signal
-- ✅ Price Trend chart (Recharts LineChart, 10 matchdays)
-- ✅ Performance Trend chart (Recharts LineChart, 5 matchdays)
-- ✅ Recharts config locked: no CartesianGrid, no Tooltip, no Legend, no dot, height 120px
+- ✅ Player header: name, club, position badge (pill)
+- ✅ Stat grid: 2 col × 3 row (price, season pts, last 5, yield, benchmark yield, value signal)
+- ✅ Divider between stat grid and charts
+- ✅ Chart labels in KPI Label style ("PRICE TREND" / "PERFORMANCE TREND")
+- ✅ Price Trend chart (Recharts, 10 matchdays, YAxis visible, width=32)
+- ✅ Performance Trend chart (Recharts, 5 matchdays, YAxis visible)
+- ✅ Recharts config locked: no CartesianGrid, no Tooltip, no Legend, dot=false, strokeWidth=1.5, height 120px
+- ✅ XAxis ticks: first and last matchday only
 - ✅ Price chart line color: green if net positive, red if negative, black if flat
 - ✅ Numeric summaries below each chart
-- ⬜ **Subtask:** Stat grid layout — 2 columns × 3 rows, labels in KPI Label style
-- ⬜ **Subtask:** Divider between stat grid and charts (1px #E5E7EB)
-- ⬜ **Subtask:** Chart title labels: "PRICE TREND" / "PERFORMANCE TREND" in KPI Label style
-- ⬜ **Subtask:** 16px vertical gap between charts
-- ⬜ **Subtask:** Divider below charts, above action button
-- ⬜ **Subtask:** "Transfer In" button — Primary, full-width in panel
-  - If player already in squad: "Already in Squad" (disabled)
-  - If matchday locked: disabled
-  - If budget exceeded: "Insufficient budget" (disabled)
-  - On success: run validators → insert transfer_log → update squad_players → button changes to "Already in Squad"
+- ✅ 16px gap between charts
+- ✅ Divider below charts, above action button
+- ✅ "Transfer In" button — Primary, full-width
+  - ✅ Already in Squad: disabled
+  - ✅ Insufficient budget: disabled
+  - ✅ Position full: disabled
+  - ✅ Matchday locked: disabled
+  - ✅ On success: insert squad_player, deduct budget, refetch
 
 ### Transfer In from Market
-- ⬜ Wire "Transfer In" to full transfer execution flow
-- ⬜ Budget enforcement: disable if `player.price > squad.budget_remaining`
-- ⬜ During squad build (<15 players): no TransferLog check, just composition + club limit + budget
+- ✅ Wire "Transfer In" to transfer execution flow (squad build mode, no TransferLog)
+- ✅ Budget enforcement: disable if `player.price > squad.budget_remaining`
+- ✅ Club limit validation
+- ✅ During squad build (<15 players): no TransferLog check, just composition + club limit + budget
 
 > **Recharts locked config reference** (from `masterplan_v1.7.md` §7 + `design_guidelines_v2.0.md` §14):
 > ```tsx
@@ -165,52 +168,57 @@
 ## Phase 4 — Draft Sandbox
 
 ### Step 6 — Sandbox Page (`src/pages/SandboxPage.tsx`)
-- ⬜ State management (ALL React useState — Architecture Rule 2):
+- ✅ State management (ALL React useState — Architecture Rule 2):
   - `simulatedSquad` — deep copy of live squad on tab load
   - `simulatedTransferCount` — starts at 0, max 5
   - `baselineYield` — computed once from live squad
   - `simulatedYield` — recomputed after each simulation
-- ⬜ Layout: left panel 50% (simulation builder) / right panel 50% (projected output)
+- ✅ Layout: left panel 50% (simulation builder) / right panel 50% (projected output)
 
 ### Left Panel — Simulation Builder
-- ⬜ Show `simulatedSquad` grouped by position
-- ⬜ Each row: stats + "Simulate Out" button (Secondary)
-- ⬜ "Simulate Out" opens inline picker (same drawer pattern as Holdings)
-- ⬜ Replacement search includes ALL players at position (no club limit blocking)
-- ⬜ Club limit breach: show warning inline, do NOT block simulation
-  - Warning copy: "Note: This transfer would breach the 3-player club limit in your live squad."
-- ⬜ Yield impact preview before confirm
-- ⬜ On confirm: update `simulatedSquad` in state, increment `simulatedTransferCount`
-- ⬜ Counter at top: "Simulations: X/5"
-- ⬜ Reset button (Ghost): resets to live squad, count → 0
-- ⬜ After 5th: all "Simulate Out" disabled, message: "Simulation limit reached (5/5). Reset to continue."
-- ⬜ "SIMULATION MODE" label below tab bar (full width, 28px, #F9FAFB bg, #9CA3AF text)
+- ✅ Show `simulatedSquad` grouped by position
+- ✅ Each row: stats + "Simulate Out" button (Secondary)
+- ✅ "Simulate Out" opens inline picker (same drawer pattern as Holdings)
+- ✅ Replacement search includes ALL players at position (no club limit blocking)
+- ✅ Club limit breach: show warning inline, do NOT block simulation
+- ✅ Yield impact preview before confirm
+- ✅ On confirm: update `simulatedSquad` in state, increment `simulatedTransferCount`
+- ✅ Counter at top: "Simulations: X/5"
+- ✅ Reset button (Ghost): resets to live squad, count → 0
+- ✅ After 5th: all "Simulate Out" disabled, message: "Simulation limit reached (5/5). Reset to continue."
+- ✅ "SIMULATION MODE" label below tab bar (full width, 28px, #F9FAFB bg, #9CA3AF text)
 
 ### Right Panel — Projected Output
-- ⬜ Net Rolling Yield Impact — dominant metric, largest element, signed delta (+0.12 green / -0.08 red)
-- ⬜ Label: "YIELD IMPACT vs CURRENT SQUAD"
-- ⬜ Divider
-- ⬜ Projected Top 11 — compact list from `computeTop11(simulatedSquad)`
-- ⬜ Projected Points total
-- ⬜ Budget Margin: "€XM remaining" — negative shown in red
+- ✅ Net Rolling Yield Impact — dominant metric, largest element, signed delta
+- ✅ Label: "YIELD IMPACT vs CURRENT SQUAD"
+- ✅ Divider
+- ✅ Projected Top 11 — compact list from `computeTop11(simulatedSquad)`
+- ✅ Projected Points total
+- ✅ Budget Margin: "€XM remaining" — negative shown in red
 
 ### Sandbox Rules (Architecture Rule 2)
-- ⬜ **NEVER** writes to Supabase — no transfer_log rows, no squad_players changes
-- ⬜ All state resets on page refresh — intentional
-- ⬜ KPI band reflects LIVE squad, not simulation
-- ⬜ Sandbox always available even when matchday is locked
+- ✅ **NEVER** writes to Supabase — no transfer_log rows, no squad_players changes
+- ✅ All state resets on page refresh — intentional
+- ✅ KPI band reflects LIVE squad, not simulation
+- ✅ Sandbox always available even when matchday is locked
 
 ---
 
 ## Phase 5 — Matchday Locking, Auth Polish & QA
 
 ### Step 7 — Matchday Locking
-- ⬜ On app load: fetch current `matchday_config` row
-- ⬜ If `is_locked`: disable all transfer buttons, leverage toggles, star icons
-- ⬜ Locked banner: "Matchday in Progress — Transfers Locked" (full width, 32px, #F9FAFB bg, #9CA3AF text)
-- ⬜ Market: "Transfer In" disabled during lock
-- ⬜ Sandbox: fully functional regardless of lock state
-- ⬜ If `is_break_period`: show unlimited transfers (∞ in KPI band)
+- ✅ On app load: fetch current `matchday_config` row
+- ✅ If `is_locked`: disable all transfer buttons, leverage toggles, star icons
+- ✅ Locked banner: "Matchday in Progress — Transfers Locked" (full width, 32px, #F9FAFB bg, #9CA3AF text)
+- ✅ Market: "Transfer In" disabled during lock
+- ✅ Sandbox: fully functional regardless of lock state
+- ✅ If `is_break_period`: show unlimited transfers (∞ in KPI band)
+
+### Step 8 — Auth Polish
+- ✅ New user: auto-create empty squad row (budget_remaining = 100.0)
+- ✅ Empty squad prompt: "Your squad is empty. Go to Market to add players." (inline text, not modal)
+- ✅ Returning user: skip login page, redirect to /holdings
+- ✅ No logout button in MVP (per `app_flow_v2.0.md` Flow 9)
 
 ### Step 8 — Auth Polish
 - ⬜ New user: auto-create empty squad row (budget_remaining = 100.0)
