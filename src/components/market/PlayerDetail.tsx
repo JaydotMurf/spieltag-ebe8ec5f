@@ -134,134 +134,136 @@ export function PlayerDetail({ player, detail, benchmarkYield }: PlayerDetailPro
     : [];
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto p-sp-6">
-      {/* Header */}
-      <div className="mb-sp-6">
-        <h2 className="page-header text-foreground">{player.name}</h2>
-        <div className="flex items-center gap-sp-3 mt-sp-1">
-          <span className="body-secondary">{player.team}</span>
-          <span className="rounded bg-surface px-sp-3 py-1 text-[14px] text-foreground">{player.position}</span>
+    <div className="flex h-full flex-col">
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto p-sp-6">
+        {/* Header */}
+        <div className="mb-sp-6">
+          <h2 className="page-header text-foreground">{player.name}</h2>
+          <div className="flex items-center gap-sp-3 mt-sp-1">
+            <span className="body-secondary">{player.team}</span>
+            <span className="rounded bg-surface px-sp-3 py-1 text-[14px] text-foreground">{player.position}</span>
+          </div>
+        </div>
+
+        {/* Stat grid — 2 col × 3 row */}
+        <div className="grid grid-cols-2 gap-x-sp-8 gap-y-sp-4 mb-sp-6">
+          <StatCell label="PRICE" value={`€${Number(player.price).toFixed(1)}M`} />
+          <StatCell label="SEASON PTS" value={String(player.season_points)} />
+          <StatCell label="LAST 5 PTS" value={String(player.last_5_points)} />
+          <StatCell label="ROLLING YIELD" value={yield_.toFixed(2)} />
+          <StatCell label="BENCHMARK YIELD" value={benchmarkYield.toFixed(2)} />
+          <div className="flex flex-col">
+            <span className="kpi-label">VALUE SIGNAL</span>
+            <div className="mt-sp-1">{signalBadge}</div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-border mb-sp-6" />
+
+        {/* Price Trend Chart */}
+        <div className="mb-sp-4">
+          <span className="kpi-label block mb-sp-2">PRICE TREND</span>
+          {detail.priceHistory.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={120}>
+                <LineChart data={detail.priceHistory} margin={{ left: 8 }}>
+                  <XAxis
+                    dataKey="matchday"
+                    tick={{ fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={false}
+                    ticks={priceTicks}
+                    tickFormatter={(val: number) => `MD${val}`}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={false}
+                    width={32}
+                    domain={['auto', 'auto']}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="price"
+                    stroke={priceColor}
+                    strokeWidth={1.5}
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              {priceSummary && (
+                <span className="body-secondary mt-sp-2 block">{priceSummary}</span>
+              )}
+            </>
+          ) : (
+            <span className="body-secondary">No price data available.</span>
+          )}
+        </div>
+
+        {/* 16px gap between charts */}
+        <div className="h-sp-4" />
+
+        {/* Performance Trend Chart */}
+        <div className="mb-sp-6">
+          <span className="kpi-label block mb-sp-2">PERFORMANCE TREND</span>
+          {detail.matchdayStats.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={120}>
+                <LineChart data={detail.matchdayStats} margin={{ left: 8 }}>
+                  <XAxis
+                    dataKey="matchday"
+                    tick={{ fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={false}
+                    ticks={perfTicks}
+                    tickFormatter={(val: number) => `MD${val}`}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={false}
+                    width={32}
+                    domain={['auto', 'auto']}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="points"
+                    stroke="#111111"
+                    strokeWidth={1.5}
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              {perfSummary && (
+                <span className="body-secondary mt-sp-2 block">{perfSummary}</span>
+              )}
+            </>
+          ) : (
+            <span className="body-secondary">No performance data available.</span>
+          )}
         </div>
       </div>
 
-      {/* Stat grid — 2 col × 3 row */}
-      <div className="grid grid-cols-2 gap-x-sp-8 gap-y-sp-4 mb-sp-6">
-        <StatCell label="PRICE" value={`€${Number(player.price).toFixed(1)}M`} />
-        <StatCell label="SEASON PTS" value={String(player.season_points)} />
-        <StatCell label="LAST 5 PTS" value={String(player.last_5_points)} />
-        <StatCell label="ROLLING YIELD" value={yield_.toFixed(2)} />
-        <StatCell label="BENCHMARK YIELD" value={benchmarkYield.toFixed(2)} />
-        <div className="flex flex-col">
-          <span className="kpi-label">VALUE SIGNAL</span>
-          <div className="mt-sp-1">{signalBadge}</div>
-        </div>
-      </div>
-
-      {/* Divider */}
-      <div className="border-t border-border mb-sp-6" />
-
-      {/* Price Trend Chart */}
-      <div className="mb-sp-4">
-        <span className="kpi-label block mb-sp-2">PRICE TREND</span>
-        {detail.priceHistory.length > 0 ? (
-          <>
-            <ResponsiveContainer width="100%" height={120}>
-              <LineChart data={detail.priceHistory}>
-                <XAxis
-                  dataKey="matchday"
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
-                  ticks={priceTicks}
-                  tickFormatter={(val: number) => `MD${val}`}
-                />
-                <YAxis
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
-                  width={32}
-                  domain={['auto', 'auto']}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="price"
-                  stroke={priceColor}
-                  strokeWidth={1.5}
-                  dot={false}
-                  isAnimationActive={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-            {priceSummary && (
-              <span className="body-secondary mt-sp-2 block">{priceSummary}</span>
-            )}
-          </>
-        ) : (
-          <span className="body-secondary">No price data available.</span>
+      {/* Fixed footer — Transfer In button */}
+      <div className="shrink-0 border-t border-border p-sp-6">
+        {transferError && (
+          <span className="text-[12px] text-signal-red mb-sp-2 block">{transferError}</span>
         )}
+        <button
+          onClick={handleTransferIn}
+          disabled={!canTransferIn || transferring}
+          className="h-9 w-full rounded bg-foreground px-sp-4 text-[14px] font-semibold text-primary-foreground
+            transition-colors duration-150 hover:bg-[#374151]
+            focus:outline-2 focus:outline-offset-2 focus:outline-foreground
+            disabled:bg-border disabled:text-muted-foreground disabled:cursor-not-allowed"
+        >
+          {transferring ? 'Processing…' : buttonLabel}
+        </button>
       </div>
-
-      {/* 16px gap between charts */}
-      <div className="h-sp-4" />
-
-      {/* Performance Trend Chart */}
-      <div className="mb-sp-6">
-        <span className="kpi-label block mb-sp-2">PERFORMANCE TREND</span>
-        {detail.matchdayStats.length > 0 ? (
-          <>
-            <ResponsiveContainer width="100%" height={120}>
-              <LineChart data={detail.matchdayStats}>
-                <XAxis
-                  dataKey="matchday"
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
-                  ticks={perfTicks}
-                  tickFormatter={(val: number) => `MD${val}`}
-                />
-                <YAxis
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
-                  width={32}
-                  domain={['auto', 'auto']}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="points"
-                  stroke="#111111"
-                  strokeWidth={1.5}
-                  dot={false}
-                  isAnimationActive={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-            {perfSummary && (
-              <span className="body-secondary mt-sp-2 block">{perfSummary}</span>
-            )}
-          </>
-        ) : (
-          <span className="body-secondary">No performance data available.</span>
-        )}
-      </div>
-
-      {/* Divider */}
-      <div className="border-t border-border mb-sp-4" />
-
-      {/* Transfer In button */}
-      {transferError && (
-        <span className="text-[12px] text-signal-red mb-sp-2 block">{transferError}</span>
-      )}
-      <button
-        onClick={handleTransferIn}
-        disabled={!canTransferIn || transferring}
-        className="h-9 w-full rounded bg-foreground px-sp-4 text-[14px] font-semibold text-primary-foreground
-          transition-colors duration-150 hover:bg-[#374151]
-          focus:outline-2 focus:outline-offset-2 focus:outline-foreground
-          disabled:bg-border disabled:text-muted-foreground disabled:cursor-not-allowed"
-      >
-        {transferring ? 'Processing…' : buttonLabel}
-      </button>
     </div>
   );
 }
