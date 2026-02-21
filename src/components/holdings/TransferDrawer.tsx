@@ -99,6 +99,12 @@ export function TransferDrawer({ outgoingPlayer, onClose }: TransferDrawerProps)
         player_id: selectedPlayer.id,
       });
 
+      // Update budget
+      const budgetDelta = Number(outgoingPlayer.price) - Number(selectedPlayer.price);
+      await supabase.from('squads').update({
+        budget_remaining: squad.budget_remaining + budgetDelta,
+      }).eq('id', squad.id);
+
       refetch();
       onClose();
     } catch (err) {

@@ -1,6 +1,8 @@
 import { Search, X } from 'lucide-react';
+import { getValueSignal } from '@/lib/metrics';
 import type { MarketPlayer } from '@/hooks/useMarketPlayers';
 import type { Position } from '@/lib/types';
+import { useSquadDataContext } from '@/components/AppShell';
 
 const POSITIONS: (Position | 'ALL')[] = ['ALL', 'GK', 'DEF', 'MID', 'FWD'];
 
@@ -15,6 +17,31 @@ interface PlayerListProps {
   onSelectPlayer: (id: string) => void;
 }
 
+function ValueBadge({ signal }: { signal: ReturnType<typeof getValueSignal> }) {
+  if (signal === 'UNDERVALUED') {
+    return (
+      <span className="inline-flex items-center gap-sp-2">
+        <span className="h-2 w-2 rounded-full bg-signal-green shrink-0" />
+        <span className="badge-text text-signal-green">Undervalued</span>
+      </span>
+    );
+  }
+  if (signal === 'OVERVALUED') {
+    return (
+      <span className="inline-flex items-center gap-sp-2">
+        <span className="h-2 w-2 rounded-full bg-signal-red shrink-0" />
+        <span className="badge-text text-signal-red">Overvalued</span>
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-sp-2">
+      <span className="h-2 w-2 rounded-full bg-muted-foreground shrink-0" />
+      <span className="badge-text text-muted-foreground">Fair</span>
+    </span>
+  );
+}
+
 export function PlayerList({
   players,
   loading,
@@ -25,6 +52,13 @@ export function PlayerList({
   selectedPlayerId,
   onSelectPlayer,
 }: PlayerListProps) {
+  const { benchmarkSnapshots } = useSquadDataContext();
+
+  const getBenchmark = (pos: string) => {
+    const snap = benchmarkSnapshots.find(b => b.position === pos);
+    return snap ? Number(snap.median_yield) : 0;
+  };
+
   return (
     <div className="flex h-full flex-col border-r border-border">
       {/* Position filter pills */}
@@ -40,7 +74,7 @@ export function PlayerList({
                 focus:outline-2 focus:outline-offset-0 focus:outline-foreground
                 ${isActive
                   ? 'bg-foreground text-primary-foreground'
-                  : 'bg-surface text-muted-foreground hover:text-foreground hover:bg-border'
+                  : 'bg-background text-muted-foreground border border-border hover:border-muted-foreground'
                 }
               `}
             >
@@ -73,13 +107,6 @@ export function PlayerList({
         )}
       </div>
 
-      {/* Column headers */}
-      <div className="flex items-center gap-sp-2 border-b border-border px-sp-4 py-sp-2">
-        <span className="body-secondary flex-1">Player</span>
-        <span className="body-secondary w-20 text-right">Price</span>
-        <span className="body-secondary w-16 text-right">Yield</span>
-      </div>
-
       {/* Player list */}
       <div className="flex-1 overflow-y-auto">
         {loading ? (
@@ -88,27 +115,43 @@ export function PlayerList({
           </div>
         ) : players.length === 0 ? (
           <div className="flex items-center justify-center py-sp-16">
-            <span className="body-secondary">No players found.</span>
+            <span className="body-secondary">No players match your search.</span>
           </div>
         ) : (
-          players.map(player => {
+          players.map((player, idx) => {
             const isSelected = selectedPlayerId === player.id;
+            const benchmark = getBenchmark(player.position);
+            const signal = player.position !== 'GK'
+              ? getValueSignal(Number(player.rolling_yield), benchmark)
+              : null;
+
             return (
               <div
                 key={player.id}
                 onClick={() => onSelectPlayer(player.id)}
                 className={`
-                  flex h-12 cursor-pointer items-center gap-sp-2 border-b border-border px-sp-4
+                  flex h-12 cursor-pointer items-center gap-sp-5 border-b border-border px-sp-4
                   transition-colors duration-150 hover:bg-surface
                   ${isSelected ? 'border-l-2 border-l-foreground bg-surface' : ''}
+                  ${!isSelected && idx % 2 === 1 ? 'bg-surface' : ''}
                 `}
               >
-                <div className="flex flex-1 flex-col min-w-0">
+                {/* Name + Club */}
+                <div className="flex flex-1 min-w-0 items-baseline gap-sp-1">
                   <span className="body-primary text-foreground truncate">{player.name}</span>
-                  <span className="text-[11px] text-muted-foreground">{player.team} · {player.position}</span>
+                  <span className="body-secondary shrink-0">{player.team}</span>
                 </div>
-                <span className="stat-value text-foreground w-20 text-right shrink-0">€{Number(player.price).toFixed(1)}M</span>
-                <span className="stat-value text-foreground w-16 text-right shrink-0">{Number(player.rolling_yield).toFixed(2)}</span>
+
+                {/* Price */}
+                <span className="stat-value text-foreground w-16 text-right shrink-0">€{Number(player.price).toFixed(1)}M</span>
+
+                {/* Rolling yield */}
+                <span className="stat-value text-foreground w-12 text-right shrink-0">{Number(player.rolling_yield).toFixed(2)}</span>
+
+                {/* Value signal badge */}
+                <div className="w-24 text-right shrink-0 max-sm:hidden">
+                  {signal && <ValueBadge signal={signal} />}
+                </div>
               </div>
             );
           })
