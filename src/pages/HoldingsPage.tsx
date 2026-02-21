@@ -78,22 +78,38 @@ export default function HoldingsPage() {
             </span>
           </div>
         ) : (
-          (['GK', 'DEF', 'MID', 'FWD'] as const).map(pos => (
-            <PositionGroup
-              key={pos}
-              position={pos}
-              players={groupedPlayers[pos]}
-              leverageActive={
-                pos === 'GK'
-                  ? false
-                  : squad?.[`leverage_${pos.toLowerCase()}_active` as keyof typeof squad] as boolean ?? false
-              }
-              onToggleLeverage={pos !== 'GK' ? () => handleToggleLeverage(pos as 'DEF' | 'MID' | 'FWD') : undefined}
-              wastedLeveragePlayer={pos !== 'GK' ? getWastedLeveragePlayer(pos as 'DEF' | 'MID' | 'FWD') : undefined}
-              benchmarkYield={getBenchmark(pos)}
-              isLocked={isLocked}
-            />
-          ))
+          <>
+            <div className="flex items-center justify-end px-sp-4 py-sp-2 border-b border-border">
+              <span className="kpi-label mr-sp-3">BUDGET REMAINING</span>
+              <span className="stat-value text-foreground tabular-nums">
+                €{Number(squad?.budget_remaining ?? 0).toFixed(1)}M
+              </span>
+            </div>
+            <div className="flex h-8 items-center border-b border-border px-sp-4 bg-surface">
+              <div className="flex-1" />
+              <span className="kpi-label w-20 text-right">PRICE</span>
+              <span className="kpi-label w-16 text-right px-sp-4">LAST 5</span>
+              <span className="kpi-label w-16 text-right px-sp-4">YIELD</span>
+              <span className="kpi-label w-24 text-right px-sp-4">SIGNAL</span>
+              <div className="w-28" />
+            </div>
+            {(['GK', 'DEF', 'MID', 'FWD'] as const).map(pos => (
+              <PositionGroup
+                key={pos}
+                position={pos}
+                players={groupedPlayers[pos]}
+                leverageActive={
+                  pos === 'GK'
+                    ? false
+                    : squad?.[`leverage_${pos.toLowerCase()}_active` as keyof typeof squad] as boolean ?? false
+                }
+                onToggleLeverage={pos !== 'GK' ? () => handleToggleLeverage(pos as 'DEF' | 'MID' | 'FWD') : undefined}
+                wastedLeveragePlayer={pos !== 'GK' ? getWastedLeveragePlayer(pos as 'DEF' | 'MID' | 'FWD') : undefined}
+                benchmarkYield={getBenchmark(pos)}
+                isLocked={isLocked}
+              />
+            ))}
+          </>
         )}
       </div>
 
