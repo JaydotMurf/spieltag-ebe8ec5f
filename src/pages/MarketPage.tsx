@@ -39,7 +39,7 @@ export default function MarketPage() {
       </div>
 
       {/* Right panel — 60%, sticky */}
-      <div className="flex-1 max-sm:h-[50%] overflow-y-auto">
+      <div className="flex-1 max-sm:h-[50%]">
         {selectedPlayer ? (
           <PlayerDetail
             player={selectedPlayer}
