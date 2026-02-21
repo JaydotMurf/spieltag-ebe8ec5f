@@ -1,7 +1,58 @@
+import { useState, useMemo } from 'react';
+import { useMarketPlayers } from '@/hooks/useMarketPlayers';
+import { usePlayerDetail } from '@/hooks/usePlayerDetail';
+import { useSquadDataContext } from '@/components/AppShell';
+import { PlayerList } from '@/components/market/PlayerList';
+import { PlayerDetail } from '@/components/market/PlayerDetail';
+
 export default function MarketPage() {
+  const { players, loading, positionFilter, setPositionFilter, searchQuery, setSearchQuery } = useMarketPlayers();
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const detail = usePlayerDetail(selectedPlayerId);
+  const { benchmarkSnapshots } = useSquadDataContext();
+
+  const selectedPlayer = useMemo(
+    () => players.find(p => p.id === selectedPlayerId) ?? null,
+    [players, selectedPlayerId]
+  );
+
+  // Get benchmark yield for the selected player's position
+  const benchmarkYield = useMemo(() => {
+    if (!selectedPlayer) return 0;
+    const snap = benchmarkSnapshots.find(b => b.position === selectedPlayer.position);
+    return snap ? Number(snap.median_yield) : 0;
+  }, [selectedPlayer, benchmarkSnapshots]);
+
   return (
-    <div className="flex items-center justify-center py-sp-16 px-sp-12 max-sm:px-sp-4">
-      <span className="body-secondary text-muted-foreground">Market Terminal — Coming next.</span>
+    <div className="flex h-[calc(100vh-theme(spacing.sp-16)-44px-44px)] max-sm:flex-col">
+      {/* Left panel — 40% */}
+      <div className="w-[40%] max-sm:w-full max-sm:h-[50%] shrink-0">
+        <PlayerList
+          players={players}
+          loading={loading}
+          positionFilter={positionFilter}
+          onPositionChange={setPositionFilter}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedPlayerId={selectedPlayerId}
+          onSelectPlayer={setSelectedPlayerId}
+        />
+      </div>
+
+      {/* Right panel — 60% */}
+      <div className="flex-1 max-sm:h-[50%]">
+        {selectedPlayer ? (
+          <PlayerDetail
+            player={selectedPlayer}
+            detail={detail}
+            benchmarkYield={benchmarkYield}
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <span className="body-secondary">Select a player to view details.</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
