@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSquadDataContext } from '@/components/AppShell';
@@ -27,11 +27,15 @@ export default function SandboxPage() {
   const [simulatedSquad, setSimulatedSquad] = useState<SimPlayer[]>([]);
   const [simulatedTransferCount, setSimulatedTransferCount] = useState(0);
   const [openPickerPlayerId, setOpenPickerPlayerId] = useState<string | null>(null);
+  const initialSquadRef = useRef<SimPlayer[]>([]);
 
   // Initialize simulated squad from live squad
   useEffect(() => {
-    setSimulatedSquad([...livePlayers]);
-    setSimulatedTransferCount(0);
+    if (livePlayers.length > 0 && initialSquadRef.current.length === 0) {
+      initialSquadRef.current = [...livePlayers];
+      setSimulatedSquad([...livePlayers]);
+      setSimulatedTransferCount(0);
+    }
   }, [livePlayers]);
 
   // Baseline yield (from live squad)
@@ -94,7 +98,7 @@ export default function SandboxPage() {
   }, [squad, livePlayers, simulatedSquad]);
 
   const handleReset = () => {
-    setSimulatedSquad([...livePlayers]);
+    setSimulatedSquad([...initialSquadRef.current]);
     setSimulatedTransferCount(0);
     setOpenPickerPlayerId(null);
   };
